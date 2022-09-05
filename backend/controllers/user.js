@@ -7,8 +7,7 @@ const cloudinary = require("cloudinary");
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    const avatar = req.files.avatar.tempFilePath;
-    console.log(name, email, password, avatar);
+    console.log(name, email, password);
     let user = await User.findOne({ email });
     if (user) {
       return res
@@ -16,7 +15,7 @@ exports.register = async (req, res) => {
         .json({ success: false, message: "User already exists" });
     }
 
-    const myCloud = await cloudinary.v2.uploader.upload(avatar, {
+    const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
       folder: "avatars",
     });
 
@@ -356,12 +355,9 @@ exports.getUserProfile = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User
-      .find
-      //   {
-      //   name: { $regex: req.query.name, $options: "i" },
-      // }
-      ();
+    const users = await User.find({
+      name: { $regex: req.query.name, $options: "i" },
+    });
 
     res.status(200).json({
       success: true,
