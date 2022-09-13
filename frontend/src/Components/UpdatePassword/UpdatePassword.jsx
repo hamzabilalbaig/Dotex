@@ -35,7 +35,7 @@ const UpdatePassword = () => {
     <div className="updatePassword">
       <form className="updatePasswordForm" onSubmit={submitHandler}>
         <Typography variant="h3" style={{ padding: "2vmax" }}>
-          Social Aap
+          Dotex
         </Typography>
 
         <input
