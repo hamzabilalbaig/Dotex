@@ -29,10 +29,14 @@ app.use(cors());
 // Importing Routes
 const post = require("./routes/post");
 const user = require("./routes/user");
+const conversations = require("./routes/conversations");
+const messages = require("./routes/messages");
 
 // Using Routes
 app.use("/api/v1", post);
 app.use("/api/v1", user);
+app.use("/api/conversations", conversations);
+app.use("/api/messages", messages);
 
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
