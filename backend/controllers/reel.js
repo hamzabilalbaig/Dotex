@@ -1,30 +1,31 @@
-const Post = require("../models/Post");
+const Reel = require("../models/Reel");
 const User = require("../models/User");
 const cloudinary = require("cloudinary");
+
 exports.createReel = async (req, res) => {
   try {
-    const myCloud = await cloudinary.v2.uploader.upload(req.body.image, {
-      folder: "posts",
+    const myCloud = await cloudinary.v2.uploader.upload(req.body.reel, {
+      folder: "reels",
     });
-    const newPostData = {
+    const newReelData = {
       caption: req.body.caption,
-      image: {
+      reel: {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
       },
       owner: req.user._id,
     };
 
-    const post = await Post.create(newPostData);
+    const reel = await Reel.create(newReelData);
 
     const user = await User.findById(req.user._id);
 
-    user.posts.unshift(post._id);
+    user.reels.unshift(reel._id);
 
     await user.save();
     res.status(201).json({
       success: true,
-      message: "Post created",
+      message: "Reel created",
     });
   } catch (error) {
     res.status(500).json({
@@ -34,38 +35,38 @@ exports.createReel = async (req, res) => {
   }
 };
 
-exports.deletePost = async (req, res) => {
+exports.deleteReel = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const reel = await Reel.findById(req.params.id);
 
-    if (!post) {
+    if (!reel) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "reel not found",
       });
     }
 
-    if (post.owner.toString() !== req.user._id.toString()) {
+    if (reel.owner.toString() !== req.user._id.toString()) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    await cloudinary.v2.uploader.destroy(post.image.public_id);
+    await cloudinary.v2.uploader.destroy(reel.video.public_id);
 
-    await post.remove();
+    await reel.remove();
 
     const user = await User.findById(req.user._id);
 
-    const index = user.posts.indexOf(req.params.id);
-    user.posts.splice(index, 1);
+    const index = user.reels.indexOf(req.params.id);
+    user.reels.splice(index, 1);
 
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Post deleted",
+      message: "reel deleted",
     });
   } catch (error) {
     res.status(500).json({
@@ -75,32 +76,32 @@ exports.deletePost = async (req, res) => {
   }
 };
 
-exports.likeAndUnlikePost = async (req, res) => {
+exports.likeAndUnlikeReel = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const reel = await Reel.findById(req.params.id);
 
-    if (!post) {
+    if (!reel) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "reel not found",
       });
     }
 
-    if (post.likes.includes(req.user._id)) {
-      const index = post.likes.indexOf(req.user._id);
+    if (reel.likes.includes(req.user._id)) {
+      const index = reel.likes.indexOf(req.user._id);
 
-      post.likes.splice(index, 1);
+      reel.likes.splice(index, 1);
 
-      await post.save();
+      await reel.save();
 
       return res.status(200).json({
         success: true,
-        message: "Post Unliked",
+        message: "reel Unliked",
       });
     } else {
-      post.likes.push(req.user._id);
+      reel.likes.push(req.user._id);
 
-      await post.save();
+      await reel.save();
 
       return res.status(200).json({
         success: true,
@@ -115,11 +116,11 @@ exports.likeAndUnlikePost = async (req, res) => {
   }
 };
 
-exports.getPostOfFollowing = async (req, res) => {
+exports.getReelOfFollowing = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    const posts = await Post.find({
+    const reels = await Reel.find({
       owner: {
         $in: user.following,
       },
@@ -127,7 +128,7 @@ exports.getPostOfFollowing = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      posts: posts.reverse(),
+      reels: reels.reverse(),
     });
   } catch (error) {
     res.status(500).json({
@@ -139,27 +140,27 @@ exports.getPostOfFollowing = async (req, res) => {
 
 exports.updateCaption = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const reel = await Reel.findById(req.params.id);
 
-    if (!post) {
+    if (!reel) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "reel not found",
       });
     }
 
-    if (post.owner.toString() !== req.user._id.toString()) {
+    if (reel.owner.toString() !== req.user._id.toString()) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    post.caption = req.body.caption;
-    await post.save();
+    reel.caption = req.body.caption;
+    await reel.save();
     res.status(200).json({
       success: true,
-      message: "Post updated",
+      message: "reel updated",
     });
   } catch (error) {
     res.status(500).json({
@@ -169,14 +170,14 @@ exports.updateCaption = async (req, res) => {
   }
 };
 
-exports.commentOnPost = async (req, res) => {
+exports.commentOnReel = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const reel = await Reel.findById(req.params.id);
 
-    if (!post) {
+    if (!reel) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "reel not found",
       });
     }
 
@@ -184,28 +185,28 @@ exports.commentOnPost = async (req, res) => {
 
     // Checking if comment already exists
 
-    post.comments.forEach((item, index) => {
+    reel.comments.forEach((item, index) => {
       if (item.user.toString() === req.user._id.toString()) {
         commentIndex = index;
       }
     });
 
     if (commentIndex !== -1) {
-      post.comments[commentIndex].comment = req.body.comment;
+      reel.comments[commentIndex].comment = req.body.comment;
 
-      await post.save();
+      await reel.save();
 
       return res.status(200).json({
         success: true,
         message: "Comment Updated",
       });
     } else {
-      post.comments.push({
+      reel.comments.push({
         user: req.user._id,
         comment: req.body.comment,
       });
 
-      await post.save();
+      await reel.save();
       return res.status(200).json({
         success: true,
         message: "Comment added",
@@ -221,18 +222,18 @@ exports.commentOnPost = async (req, res) => {
 
 exports.deleteComment = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const reel = await Reel.findById(req.params.id);
 
-    if (!post) {
+    if (!reel) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "reel not found",
       });
     }
 
     // Checking If owner wants to delete
 
-    if (post.owner.toString() === req.user._id.toString()) {
+    if (reel.owner.toString() === req.user._id.toString()) {
       if (req.body.commentId === undefined) {
         return res.status(400).json({
           success: false,
@@ -240,26 +241,26 @@ exports.deleteComment = async (req, res) => {
         });
       }
 
-      post.comments.forEach((item, index) => {
+      reel.comments.forEach((item, index) => {
         if (item._id.toString() === req.body.commentId.toString()) {
-          return post.comments.splice(index, 1);
+          return reel.comments.splice(index, 1);
         }
       });
 
-      await post.save();
+      await reel.save();
 
       return res.status(200).json({
         success: true,
         message: "Selected Comment has deleted",
       });
     } else {
-      post.comments.forEach((item, index) => {
+      reel.comments.forEach((item, index) => {
         if (item.user.toString() === req.user._id.toString()) {
-          return post.comments.splice(index, 1);
+          return reel.comments.splice(index, 1);
         }
       });
 
-      await post.save();
+      await reel.save();
 
       return res.status(200).json({
         success: true,
