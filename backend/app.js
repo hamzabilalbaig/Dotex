@@ -38,10 +38,10 @@ app.use("/api/v1", user);
 app.use("/api/conversations", conversations);
 app.use("/api/messages", messages);
 
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "../frontend/src")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.resolve(__dirname, "../frontend/src/index.js"));
 });
 
 module.exports = app;
